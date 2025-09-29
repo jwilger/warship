@@ -1,0 +1,4 @@
+target/
+.dependencies/
+.claude/
+node_modules/

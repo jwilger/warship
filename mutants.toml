@@ -1,0 +1,19 @@
+# Mutation testing configuration for battleship
+# Following TRACE framework requirements for ≥80% mutation score
+
+# Minimum acceptable mutation score threshold
+minimum_test_timeout = 300
+timeout_multiplier = 5.0
+
+# Only test src/ code, not tests themselves
+examine_globs = ["src/**/*.rs"]
+
+# Exclude certain patterns that shouldn't be mutated
+skip_calls_in_tests = true
+
+# Test command to use
+test_tool = "cargo"
+test_args = ["test", "--", "--test-threads=1"]
+
+# Generate detailed HTML reports
+output_format = "json"

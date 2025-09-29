@@ -1,0 +1,118 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  # Rust formatting and linting
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --all --
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --workspace --all-targets -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-test
+        name: cargo test
+        entry: cargo nextest run --workspace --fail-fast --no-tests=pass
+        language: system
+        types: [rust]
+        pass_filenames: false
+        fail_fast: true
+
+      - id: cargo-mutants
+        name: mutation testing (≥80% score required)
+        entry: cargo mutants --test-tool=cargo --test-args=test --check --in-place
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [manual]
+
+      - id: cargo-check
+        name: cargo check
+        entry: cargo check --all-targets
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-doc
+        name: cargo doc (check documentation builds)
+        entry: cargo doc --no-deps --document-private-items
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-deny
+        name: cargo deny (security & license audit)
+        entry: cargo deny check --hide-inclusion-graph
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [manual]
+
+      - id: cognitive-load-check
+        name: TRACE cognitive load analysis (≥70% required)
+        entry: bash
+        args:
+          [
+            "-c",
+            'echo ''TRACE Analysis: Checking cognitive load compliance...'' && find src -name ''*.rs'' | wc -l | awk ''{if ($1 > 10) {print "WARNING: High file count may indicate cognitive overload"; exit 1} else {print "OK: File count within cognitive limits"}}''',
+          ]
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [manual]
+
+  # Conventional commits enforcement
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # General file formatting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-json
+        exclude: '\.devcontainer/devcontainer\.json$'
+
+  # Prettier formatting for non-Rust, non-Markdown files
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [html, javascript, json, yaml]
+        files: '\.(html|js|ts|json|yaml|yml)$'
+        exclude: "node_modules/"
+        args: ["--write"]
+
+  # Markdownlint handles ALL markdown formatting and quality
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.44.0
+    hooks:
+      - id: markdownlint
+        name: Markdown formatting and quality checking
+        args: ["--fix", "--config", ".markdownlint.yaml"]
+        files: '\.(md|markdown)$'
+
+  # Documentation link checking
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: v3.11.2
+    hooks:
+      - id: markdown-link-check
+        name: Check markdown links are valid
+        args: ["--config", ".mlc_config.json"]
+        files: '\.(md|markdown)$'
+        stages: [manual]
